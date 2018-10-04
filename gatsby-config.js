@@ -1,6 +1,6 @@
 module.exports = {
   siteMetadata: {
-    title: 'Gatsby Default Starter',
+    title: 'Convert AE tracking data to a usable JSON format',
   },
   plugins: [
     'gatsby-plugin-react-helmet',

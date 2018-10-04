@@ -1,20 +1,132 @@
 import React from 'react'
-import { Link } from 'gatsby'
+// import { Link } from 'gatsby'
 
 import Layout from '../components/layout'
 
-const IndexPage = () => (
-  <Layout>
-    <h1>Convert AE tracking data to a usable JSON format</h1>
-    <div className="tracking-layout">
-      <div className="head">
-        <button>Prefill with demo content</button>
-        <button>Download JSON</button>
-      </div>
-      <textarea id="csv" placeholder="Paste in your CSV data here" />
-      <textarea id="json" placeholder="Your processed JSON will be here" />
-    </div>
-  </Layout>
-)
+import DATA from '../data/placeholderdata'
 
+class IndexPage extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { csvData: '', jsonData: '' }
+
+    this.onPrefillClick = this.onPrefillClick.bind(this)
+    this.onCSVChange = this.onCSVChange.bind(this)
+    this.onJsonChange = this.onJsonChange.bind(this)
+    this.processText = this.processText.bind(this)
+    this.downloadJSON = this.downloadJSON.bind(this)
+  }
+  convertPins(pin) {
+    const filteredPins = pin.filter(
+      entry =>
+        entry.indexOf('Corner Pin') === -1 &&
+        entry.indexOf(',,,') < 0 &&
+        entry.indexOf('Frame,X') === -1 &&
+        entry.indexOf('End of Keyframe Data') === -1
+    )
+    return filteredPins.map(el => {
+      const item = el.split(',')
+      return {
+        frame: item[1],
+        xpos: item[2],
+        ypos: item[3],
+      }
+    })
+  }
+
+  onCSVChange() {}
+  onJsonChange() {}
+  downloadJSON() {
+
+    const dataString = `data:text/json;charset=utf-8,${encodeURIComponent(this.state.jsonData)}`
+    let downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href",     dataString);
+    downloadAnchorNode.setAttribute("download", "trackingdata.json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  }
+  processText() {
+    console.log('proctxt')
+    const source = this.state.csvData
+    const pins = {
+      cornerTopLeft: source
+        .substring(
+          source.indexOf('Corner Pin-0001'),
+          source.indexOf('Corner Pin-0002')
+        )
+        .split('\n'),
+      cornerTopRight: source
+        .substring(
+          source.indexOf('Corner Pin-0002'),
+          source.indexOf('Corner Pin-0003')
+        )
+        .split('\n'),
+      cornerBottomLeft: source
+        .substring(
+          source.indexOf('Corner Pin-0003'),
+          source.indexOf('Corner Pin-0004')
+        )
+        .split('\n'),
+      cornerBottomRight: source
+        .substring(
+          source.indexOf('Corner Pin-0004'),
+          source.indexOf('Keyframe Data')
+        )
+        .split('\n'),
+    }
+    pins.cornerTopLeft = this.convertPins(pins.cornerTopLeft)
+    pins.cornerTopRight = this.convertPins(pins.cornerTopRight)
+    pins.cornerBottomLeft = this.convertPins(pins.cornerBottomLeft)
+    pins.cornerBottomRight = this.convertPins(pins.cornerBottomRight)
+    console.log(pins)
+    this.setState({ jsonData: JSON.stringify(pins) })
+  }
+
+  onPrefillClick() {
+    this.setState(
+      {
+        csvData: DATA.value,
+      },
+      () => {
+        this.processText()
+      }
+    )
+  }
+
+  onCSVUpdate() {
+    // processText()
+  }
+
+  render() {
+    return (
+      <Layout>
+        <div className="tracking-layout">
+          <div className="head">
+            <button onClick={this.onPrefillClick}>
+              Prefill with demo content
+            </button>
+            <button onClick={this.downloadJSON}>Download JSON</button>
+          </div>
+          <textarea
+            id="csv"
+            placeholder="Paste in your CSV data here"
+            value={this.state.csvData}
+            onInput={this.processText}
+            onChange={this.onCSVChange}
+          />
+          <textarea
+            id="json"
+            placeholder="Your processed JSON will be here"
+            value={this.state.jsonData}
+            onChange={this.onJsonChange}
+          />
+        </div>
+        <a href="https://codepen.io/mephysto/pen/jeWVZB" target="_blank">
+          Or check out this Codepen
+        </a>
+      </Layout>
+    )
+  }
+}
 export default IndexPage

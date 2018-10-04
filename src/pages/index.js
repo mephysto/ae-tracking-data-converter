@@ -14,6 +14,7 @@ class IndexPage extends React.Component {
     this.onCSVChange = this.onCSVChange.bind(this)
     this.onJsonChange = this.onJsonChange.bind(this)
     this.processText = this.processText.bind(this)
+    this.clear = this.clear.bind(this)
     this.downloadJSON = this.downloadJSON.bind(this)
   }
   convertPins(pin) {
@@ -33,22 +34,27 @@ class IndexPage extends React.Component {
       }
     })
   }
-
+  clear() {
+    this.setState({ csvData: '', jsonData: '' })
+    document.getElementById('csv').value = ''
+  }
   onCSVChange() {}
   onJsonChange() {}
   downloadJSON() {
-
-    const dataString = `data:text/json;charset=utf-8,${encodeURIComponent(this.state.jsonData)}`
-    let downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href",     dataString);
-    downloadAnchorNode.setAttribute("download", "trackingdata.json");
-    document.body.appendChild(downloadAnchorNode); // required for firefox
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+    const dataString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      this.state.jsonData
+    )}`
+    let downloadAnchorNode = document.createElement('a')
+    downloadAnchorNode.setAttribute('href', dataString)
+    downloadAnchorNode.setAttribute('download', 'trackingdata.json')
+    document.body.appendChild(downloadAnchorNode) // required for firefox
+    downloadAnchorNode.click()
+    downloadAnchorNode.remove()
   }
-  processText() {
-    console.log('proctxt')
-    const source = this.state.csvData
+  processText(ev) {
+    const source = document.getElementById('csv').value
+
+    this.setState({csvData: source})
     const pins = {
       cornerTopLeft: source
         .substring(
@@ -103,6 +109,7 @@ class IndexPage extends React.Component {
       <Layout>
         <div className="tracking-layout">
           <div className="head">
+            <button onClick={this.clear}>Clear</button>
             <button onClick={this.onPrefillClick}>
               Prefill with demo content
             </button>
@@ -111,7 +118,7 @@ class IndexPage extends React.Component {
           <textarea
             id="csv"
             placeholder="Paste in your CSV data here"
-            value={this.state.csvData}
+            // value={this.state.csvData}
             onInput={this.processText}
             onChange={this.onCSVChange}
           />
@@ -119,10 +126,15 @@ class IndexPage extends React.Component {
             id="json"
             placeholder="Your processed JSON will be here"
             value={this.state.jsonData}
-            onChange={this.onJsonChange}
+            readOnly
+            // onChange={this.onJsonChange}
           />
         </div>
-        <a href="https://codepen.io/mephysto/pen/jeWVZB" target="_blank">
+        <a
+          href="https://codepen.io/mephysto/pen/jeWVZB"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Or check out this Codepen
         </a>
       </Layout>
